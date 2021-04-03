@@ -1,12 +1,15 @@
 {
     "name": "chat-app-backend",
-    "version": "1.0.0",
+    "version": "0.0.0",
     "description": "",
     "main": "src/index.js",
     "scripts": {
         "dev": "nodemon src/index.js",
         "start": "node src/index.js",
         "test": "jest"
+    },
+    "jest": {
+        "testEnvironment": "node"
     },
     "repository": {
         "type": "git",
@@ -20,9 +23,13 @@
     },
     "homepage": "https://github.com/MatheusIshiyama/chat-app-backend#readme",
     "dependencies": {
+        "bcrypt": "^5.0.1",
+        "crypto": "^1.0.1",
         "dotenv": "^8.2.0",
+        "email-validator": "^2.0.4",
         "express": "^4.17.1",
-        "mongoose": "^5.12.3"
+        "mongoose": "^5.12.3",
+        "nodemailer": "^6.5.0"
     },
     "devDependencies": {
         "jest": "^26.6.3",
