@@ -26,17 +26,6 @@ describe("test validateRegister middleware", () => {
         console.log("[DEV_DATABASE] Connected");
     });
 
-    it("undefined body", async () => {
-        const req = mockRequest();
-        const res = mockResponse();
-
-        const response = await validateRegister(req, res);
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "No body provided",
-        });
-    });
-
     describe('test body["username"]', () => {
         it("undefined username", async () => {
             const req = mockRequest({ email: "test" });

@@ -2,8 +2,7 @@ const User = require("../models/user");
 const EmailValidator = require("email-validator");
 const validateBody = require("../services/validateBody");
 
-module.exports = async (req, res, next) => {
-    if (!req.body) return res.status(400).json({ message: "No body provided" });
+const validateRegister = async (req, res, next) => {
     const { username, name, email, password, checkPassword } = req.body;
 
     //* validate body
@@ -38,7 +37,11 @@ module.exports = async (req, res, next) => {
     const emailExists = await User.findOne({ email });
 
     if (userExists || emailExists)
-        return res.status(400).json({ message: "Username or Email already exists"});
+        return res
+            .status(400)
+            .json({ message: "Username or Email already exists" });
 
     next();
 };
+
+module.exports = validateRegister;
