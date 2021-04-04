@@ -1,4 +1,4 @@
-module.exports = (req, res, next) => {
+const validateCode = (req, res, next) => {
     if (!req.params.verifyCode)
         return res.status(400).json({ message: "No verifyCode provided" });
 
@@ -7,3 +7,5 @@ module.exports = (req, res, next) => {
 
     next();
 };
+
+module.exports = validateCode;
