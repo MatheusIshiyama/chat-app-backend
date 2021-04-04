@@ -21,7 +21,10 @@ const authenticate = async (username, password, res) => {
             if (!userExists.verified)
                 return res.status(401).json({ message: "User unverified" });
 
-            const token = jwt.sign(userExists.username, process.env.JWT_SECRET);
+            const token = jwt.sign(
+                { id: userExists._id },
+                process.env.JWT_SECRET
+            );
 
             return res.status(202).json({ token });
         }

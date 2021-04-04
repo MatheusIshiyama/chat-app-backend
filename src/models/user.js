@@ -9,6 +9,9 @@ const User = new database.Schema(
         verified: Boolean,
         password: String,
         createdAt: Date,
+        friendList: Array,
+        pending: Array,
+        requests: Array,
     },
     {
         versionKey: false,

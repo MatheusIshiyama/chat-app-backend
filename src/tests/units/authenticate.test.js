@@ -31,7 +31,7 @@ afterAll(async () => {
     console.log("[DEV_DATABASE] Disconnected");
 });
 
-describe("test authenticate", () => {
+describe("test authenticate service", () => {
     it("undefined username", async () => {
         const res = mockResponse();
 
