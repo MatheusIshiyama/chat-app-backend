@@ -6,182 +6,116 @@ const {
     checkPassword,
 } = require("../../services/validateBody");
 
-describe("test username function", () => {
-    it("undefined username", () => {
-        const isValid = username(null);
-        expect(isValid).toBe(false);
+describe("Test validateBody service", () => {
+    test("Test username function", () => {
+        //* username undefined
+        expect(username(undefined)).toBeFalsy();
+
+        //* username length smaller than 4
+        expect(username("tes")).toBeFalsy();
+
+        //* username length bigger than 16
+        expect(username("test_test_test_test")).toBeFalsy();
+
+        //* valid username
+        expect(username("test_test")).toBeTruthy();
     });
 
-    it("username length smaller than 4", () => {
-        const isValid = username("tes");
-        expect(isValid).toBe(false);
+    test("Test name function", () => {
+        //* name undefined
+        expect(name(undefined)).toBeFalsy();
+
+        //* name length smaller than 3
+        expect(name("te")).toBeFalsy();
+
+        //* name length bigger than 16
+        expect(name("test_test_test_test")).toBeFalsy();
+
+        //* valid name
+        expect(name("test")).toBeTruthy();
     });
 
-    it("username length bigger than 16", () => {
-        const isValid = username("test_test_test_test");
-        expect(isValid).toBe(false);
+    test("Test email function", () => {
+        //* email undefined
+        expect(email(undefined)).toBeFalsy();
+
+        //* invalid email format
+        expect(email("testtest.com")).toBeFalsy();
+
+        //* valid email format
+        expect(name("test@test.com")).toBeTruthy();
     });
 
-    it("valid username", () => {
-        const isValid = username("test_test");
-        expect(isValid).toBe(true);
-    });
-});
+    test("Test password function", () => {
+        //* password undefined
+        expect(password(undefined)).toBeFalsy();
 
-describe("test name function", () => {
-    it("undefined name", () => {
-        const isValid = name(null);
-        expect(isValid).toBe(false);
-    });
+        //* password length smaller than 8
+        expect(password("test")).toBeFalsy();
 
-    it("name length smaller than 3", () => {
-        const isValid = name("te");
-        expect(isValid).toBe(false);
-    });
+        //* password length bigger than 16
+        expect(password("test_test_test_test")).toBeFalsy();
 
-    it("name length bigger than 16", () => {
-        const isValid = name("test_test_test_test");
-        expect(isValid).toBe(false);
-    });
+        //* password doesn't have requirements
+        expect(password("test_test_test_test")).toBeFalsy();
 
-    it("valid name", () => {
-        const isValid = name("test");
-        expect(isValid).toBe(true);
-    });
-});
+        //* lowercase
+        expect(password("testtest")).toBeFalsy();
 
-describe("test email function", () => {
-    it("undefined email", () => {
-        const isValid = email(null);
-        expect(isValid).toBe(false);
-    });
+        //* lowercase and uppercase
+        expect(password("testTEST")).toBeFalsy();
 
-    it("email invalid format", () => {
-        const isValid = email("testtest.com");
-        expect(isValid).toBe(false);
-    });
+        //* lowercase and numbers
+        expect(password("test1234")).toBeFalsy();
 
-    it("valid email", () => {
-        const isValid = name("test@test.com");
-        expect(isValid).toBe(true);
-    });
-});
+        //* lowercase and symbols
+        expect(password("test!@#$")).toBeFalsy();
 
-describe("test password function", () => {
-    it("undefined password", () => {
-        const isValid = password(null);
-        expect(isValid).toBe(false);
-    });
+        //* lowercase uppercase and numbers
+        expect(password("testTEST123")).toBeFalsy();
 
-    it("password length smaller than 8", () => {
-        const isValid = password("test");
-        expect(isValid).toBe(false);
-    });
+        //* lowercase uppercase and symbols
+        expect(password("testTEST!@")).toBeFalsy();
 
-    it("password length bigger than 16", () => {
-        const isValid = password("test_test_test_test");
-        expect(isValid).toBe(false);
+        //* lowercase numbers and symbols
+        expect(password("test1234!@")).toBeFalsy();
+
+        //* uppercase
+        expect(password("TESTTEST")).toBeFalsy();
+
+        //* uppercase and numbers
+        expect(password("TEST1234")).toBeFalsy();
+
+        //* uppercase and symbols
+        expect(password("TEST!@#$")).toBeFalsy();
+
+        //* uppercase numbers and symbols
+        expect(password("TEST123!@")).toBeFalsy();
+
+        //* numbers
+        expect(password("123456789")).toBeFalsy();
+
+        //* numbers and symbols
+        expect(password("1234!@#$")).toBeFalsy();
+
+        //* symbols
+        expect(password("!@#$!@#$")).toBeFalsy();
+
+        //* valid password
+        expect(password("TestTest123!@")).toBeTruthy();
     });
 
-    it("password doesn't have requirements", () => {
-        const isValid = password("test_test_test_test");
-        expect(isValid).toBe(false);
-    });
+    test("test checkPassword function", () => {
+        //* undefined password
+        expect(checkPassword(undefined, "test")).toBeFalsy();
 
-    it("password lowecase", () => {
-        const isValid = password("testtest");
-        expect(isValid).toBe(false);
-    });
+        //* undefined checkPassword
+        expect(checkPassword("test", null)).toBeFalsy();
 
-    it("password lowecase and uppercase", () => {
-        const isValid = password("testTEST");
-        expect(isValid).toBe(false);
-    });
+        //* password and checkPassword doesn't match
+        expect(checkPassword("test_test", "testtest")).toBeFalsy();
 
-    it("password lowecase and numbers", () => {
-        const isValid = password("test1234");
-        expect(isValid).toBe(false);
-    });
-
-    it("password lowecase and symbol", () => {
-        const isValid = password("test!@#$");
-        expect(isValid).toBe(false);
-    });
-
-    it("password lowecase uppercase and numbers", () => {
-        const isValid = password("testTEST123");
-        expect(isValid).toBe(false);
-    });
-
-    it("password lowecase uppercase and symbol", () => {
-        const isValid = password("testTEST!@");
-        expect(isValid).toBe(false);
-    });
-
-    it("password lowecase numbers and symbol", () => {
-        const isValid = password("test1234!@");
-        expect(isValid).toBe(false);
-    });
-
-    it("password uppercase", () => {
-        const isValid = password("TESTTEST");
-        expect(isValid).toBe(false);
-    });
-
-    it("password uppercase and numbers", () => {
-        const isValid = password("TEST1234");
-        expect(isValid).toBe(false);
-    });
-
-    it("password uppercase and symbols", () => {
-        const isValid = password("TEST!@#$");
-        expect(isValid).toBe(false);
-    });
-
-    it("password uppercase numbers and symbols", () => {
-        const isValid = password("TEST123!@");
-        expect(isValid).toBe(false);
-    });
-
-    it("password numbers", () => {
-        const isValid = password("123456789");
-        expect(isValid).toBe(false);
-    });
-
-    it("password numbers and symbols", () => {
-        const isValid = password("1234!@#$");
-        expect(isValid).toBe(false);
-    });
-
-    it("password symbols", () => {
-        const isValid = password("!@#$!@#$");
-        expect(isValid).toBe(false);
-    });
-
-    it("valid password", () => {
-        const isValid = password("TestTest123!@");
-        expect(isValid).toBe(true);
-    });
-});
-
-describe("test checkPassword", () => {
-    it("undefined password", () => {
-        const isValid = checkPassword(null, "test");
-        expect(isValid).toBe(false);
-    });
-
-    it("undefined checkPassword", () => {
-        const isValid = checkPassword("test", null);
-        expect(isValid).toBe(false);
-    });
-
-    it("password and checkPassword doesn't match", () => {
-        const isValid = checkPassword("test_test", "testtest");
-        expect(isValid).toBe(false);
-    });
-
-    it("same password checkPassword", () => {
-        const isValid = checkPassword("test_test", "test_test");
-        expect(isValid).toBe(true);
+        //* same password checkPassword
+        expect(checkPassword("test_test", "test_test")).toBeTruthy();
     });
 });

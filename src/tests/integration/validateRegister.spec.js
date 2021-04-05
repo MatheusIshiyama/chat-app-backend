@@ -1,7 +1,18 @@
 const validateRegister = require("../../middlewares/validateRegister");
 const mongoose = require("mongoose");
-const userModel = require("../../models/user");
+const User = require("../../models/user");
 require("dotenv").config();
+
+const passwordTest = (password) => {
+    return {
+        body: {
+            username: "test_test_test",
+            name: "test",
+            email: "test@test.com",
+            password,
+        },
+    };
+};
 
 const mockRequest = (content) => {
     return { body: content };
@@ -14,7 +25,7 @@ const mockResponse = () => {
     return res;
 };
 
-describe("test validateRegister middleware", () => {
+describe("Test validateRegister middleware", () => {
     beforeAll(async () => {
         await mongoose.disconnect();
         await mongoose.connect(process.env.MONGO_DEV, {
@@ -26,95 +37,99 @@ describe("test validateRegister middleware", () => {
         console.log("[DEV_DATABASE] Connected");
     });
 
-    describe('test body["username"]', () => {
-        it("undefined username", async () => {
-            const req = mockRequest({ email: "test" });
+    describe('Test body["username"]', () => {
+        test("Username undefined", async () => {
+            const req = mockRequest({ username: undefined });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No username provided or no length accept",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No username provided or no length accept",
             });
         });
 
-        it("username length smaller then 4", async () => {
+        test("Username length smaller then 4", async () => {
             const req = mockRequest({ username: "tes" });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No username provided or no length accept",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No username provided or no length accept",
             });
         });
 
-        it("username length bigger then 16", async () => {
+        test("Username length bigger then 16", async () => {
             const req = mockRequest({ username: "test_test_test_test" });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No username provided or no length accept",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No username provided or no length accept",
             });
         });
 
-        it("valid username and undefined name", async () => {
-            const req = mockRequest({ username: "test_test_test" });
+        test("Valid username and undefined name", async () => {
+            const req = mockRequest({
+                username: "test_test_test",
+                name: undefined,
+            });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No name provided or no length accept",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No name provided or no length accept",
             });
         });
     });
 
-    describe('test body["name"]', () => {
-        it("name length smaller than 3", async () => {
+    describe('Test body["name"]', () => {
+        test("Name length smaller than 3", async () => {
             const req = mockRequest({ username: "test_test_test", name: "te" });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No name provided or no length accept",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No name provided or no length accept",
             });
         });
 
-        it("name length bigger than 16", async () => {
+        test("Name length bigger than 16", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test_test_test_test",
             });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No name provided or no length accept",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No name provided or no length accept",
             });
         });
 
-        it("valid name and undefined email", async () => {
+        test("Valid name and undefined email", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test",
+                email: undefined,
             });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No email provided or invalid format",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No email provided or invalid format",
             });
         });
     });
 
-    describe('test body["emai"]', () => {
-        it("invalid email format", async () => {
+    describe('Test body["emai"]', () => {
+        test("Invalid email format", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test",
@@ -122,31 +137,32 @@ describe("test validateRegister middleware", () => {
             });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No email provided or invalid format",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No email provided or invalid format",
             });
         });
 
-        it("valid email and undefined password", async () => {
+        test("Valid email and undefined password", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test",
                 email: "test@test.com",
+                password: undefined,
             });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
     });
 
-    describe('test body["password"]', () => {
-        it("password length smaller than 8", async () => {
+    describe('Test body["password"]', () => {
+        test("Password length smaller than 8", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test",
@@ -155,14 +171,14 @@ describe("test validateRegister middleware", () => {
             });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password length bigger than 16", async () => {
+        test("Password length bigger than 16", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test",
@@ -171,256 +187,187 @@ describe("test validateRegister middleware", () => {
             });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password uppercase", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "TESTTEST",
-            });
+        test("Password uppercase", async () => {
+            const req = passwordTest("TESTTEST");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password uppercase and lowercase", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "testTEST",
-            });
+        test("Password uppercase and lowercase", async () => {
+            const req = passwordTest("testTEST");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password uppercase and numbers", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "TESTTEST12345",
-            });
+        test("Password uppercase and numbers", async () => {
+            const req = passwordTest("TESTTEST12345");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password uppercase and symbols", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "TESTTEST@",
-            });
+        test("Password uppercase and symbols", async () => {
+            const req = passwordTest("TESTTEST@");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password uppercase lowercase and numbers", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "TESTtest12345",
-            });
+        test("Password uppercase lowercase and numbers", async () => {
+            const req = passwordTest("TESTtest12345");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password uppercase lowercase and symbols", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "TESTtest!@#",
-            });
+        test("Password uppercase lowercase and symbols", async () => {
+            const req = passwordTest("TESTtest!@#");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password uppercase numbers and symbols", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "TEST12345!@#",
-            });
+        test("Password uppercase numbers and symbols", async () => {
+            const req = passwordTest("TEST12345!@#");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password lowercase", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "testtest",
-            });
+        test("Password lowercase", async () => {
+            const req = passwordTest("testtest");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password lowercase and numbers", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "testtest12",
-            });
+        test("Password lowercase and numbers", async () => {
+            const req = passwordTest("testtest12");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password lowercase and symbols", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "testtest@!",
-            });
+        test("Password lowercase and symbols", async () => {
+            const req = passwordTest("testtest@!");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password lowercase numbers and symbols", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "test123@@!",
-            });
+        test("Password lowercase numbers and symbols", async () => {
+            const req = passwordTest("test123@@!");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password numbers", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "123456789",
-            });
+        test("Password numbers", async () => {
+            const req = passwordTest("123456789");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password numbers and symbols", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "123456!@#",
-            });
+        test("Password numbers and symbols", async () => {
+            const req = passwordTest("123456!@#");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("password only symbols", async () => {
-            const req = mockRequest({
-                username: "test_test_test",
-                name: "test",
-                email: "test@test.com",
-                password: "!@#$!@#$",
-            });
+        test("Password only symbols", async () => {
+            const req = passwordTest("!@#$!@#$");
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No password provided or doesn't match params",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No password provided or doesn't match params",
             });
         });
 
-        it("valid password and undefined checkPassword", async () => {
+        test("Valid password and undefined checkPassword", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test",
                 email: "test@test.com",
                 password: "testTest123@!",
+                checkPassword: undefined,
             });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No checkPassword provided or passwords doesn't match",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No checkPassword provided or passwords doesn't match",
             });
         });
     });
 
-    describe('test body["checkPassword"]', () => {
-        it("differents passwords", async () => {
+    describe('Test body["checkPassword"]', () => {
+        test("Differents passwords", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test",
@@ -430,14 +377,14 @@ describe("test validateRegister middleware", () => {
             });
             const res = mockResponse();
 
-            const response = await validateRegister(req, res);
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalledWith({
-                message: "No checkPassword provided or passwords doesn't match",
+            await validateRegister(req, res);
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                error: "No checkPassword provided or passwords doesn't match",
             });
         });
 
-        it("same passwords", async () => {
+        test("Same passwords", async () => {
             const req = mockRequest({
                 username: "test_test_test",
                 name: "test",
@@ -454,52 +401,52 @@ describe("test validateRegister middleware", () => {
     });
 
     afterAll(async () => {
-        const newUser = new userModel({
-            username: "test_test",
-            email: "test@test.com",
+        const newUser = new User({
+            username: "validateregister",
+            email: "validateRegister@chatApp.com",
         });
         await newUser.save();
 
-        describe("test user avaliable", () => {
-            it("username already registered", async () => {
+        describe("Test user avaliable", () => {
+            test("Username already registered", async () => {
                 const req = mockRequest({
-                    username: "test_test",
+                    username: "validateregister",
                     name: "test",
-                    email: "test@test.com",
+                    email: "validateRegister@chatApp.com",
                     password: "testTest123@!",
                     checkPassword: "testTest123@!",
                 });
                 const res = mockResponse();
 
-                const response = await validateRegister(req, res);
-                expect(response.status).toHaveBeenCalledWith(400);
-                expect(response.json).toHaveBeenCalledWith({
-                    message: "Username or Email already exists",
+                await validateRegister(req, res);
+                expect(res.status).toHaveBeenCalledWith(400);
+                expect(res.json).toHaveBeenCalledWith({
+                    error: "Username or Email already exists",
                 });
             });
 
-            it("email already registered", async () => {
+            test("Email already registered", async () => {
                 const req = mockRequest({
-                    username: "testtest",
+                    username: "registervalidate",
                     name: "test",
-                    email: "test@test.com",
+                    email: "validateRegister@chatApp.com",
                     password: "testTest123@!",
                     checkPassword: "testTest123@!",
                 });
                 const res = mockResponse();
 
-                const response = await validateRegister(req, res);
-                expect(response.status).toHaveBeenCalledWith(400);
-                expect(response.json).toHaveBeenCalledWith({
-                    message: "Username or Email already exists",
+                await validateRegister(req, res);
+                expect(res.status).toHaveBeenCalledWith(400);
+                expect(res.json).toHaveBeenCalledWith({
+                    error: "Username or Email already exists",
                 });
             });
 
-            it("username and email avaliable", async () => {
+            test("Username and email avaliable", async () => {
                 const req = mockRequest({
-                    username: "testtest",
+                    username: "registeraccept",
                     name: "test",
-                    email: "test@testing.com",
+                    email: "registerAccept@chatApp.com",
                     password: "testTest123@!",
                     checkPassword: "testTest123@!",
                 });
@@ -511,8 +458,9 @@ describe("test validateRegister middleware", () => {
             });
         });
 
-        const findUser = await userModel.findOne({ username: "test_test" });
-        await findUser.delete();
+        await User.findOneAndDelete({
+            username: "validateregister",
+        });
         await mongoose.disconnect();
         console.log("[DEV_DATABASE] Disconnected");
     });

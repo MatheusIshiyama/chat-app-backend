@@ -32,42 +32,65 @@ afterAll(async () => {
     console.log("[DEV_DATABASE] Disconnected");
 });
 
-describe("test validateFriend", () => {
-    it("undefined friendId", async () => {
+describe("Test validateFriend middleware", () => {
+    it("FriendId undefined", async () => {
         const req = mockRequest({ friendId: undefined });
         const res = mockResponse();
 
-        const response = await validateFriend(req, res);
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "No friendId provided",
+        await validateFriend(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "No friendId provided",
         });
     });
 
-    it("invalid friendId", async () => {
+    it("Invalid friendId", async () => {
         const req = mockRequest({ friendId: "test" });
         const res = mockResponse();
 
-        const response = await validateFriend(req, res);
-        expect(response.status).toHaveBeenCalledWith(404);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "User not found",
+        await validateFriend(req, res);
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "User not found",
         });
     });
 
-    it("valid friendId", async () => {
-        const user = new User({
-            username: "friendTest",
-            name: "test_test",
-            email: "test_test@test.com",
+    it("Valid friendId but not verified", async () => {
+        await new User({
+            username: "friendTest1",
+            name: "friendTest1",
+            email: "friendTest@chatApp.com",
+            verifyCode: "verified",
+            verified: false,
+            password: "testing",
+            createdAt: Date.now(),
+        }).save();
+
+        const reqUser = await User.findOne({ username: "friendTest1" });
+        const friendId = reqUser._id;
+
+        const req = mockRequest({ friendId });
+        const res = mockResponse();
+
+        await validateFriend(req, res);
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "User unverified",
+        });
+    });
+
+    it("Valid friendId and verified", async () => {
+        await new User({
+            username: "friendTest2",
+            name: "friendTest2",
+            email: "friendTest@chatApp.com",
             verifyCode: "verified",
             verified: true,
             password: "testing",
             createdAt: Date.now(),
-        });
-        await user.save();
+        }).save();
 
-        const reqUser = await User.findOne({ username: "friendTest" });
+        const reqUser = await User.findOne({ username: "friendTest2" });
         const friendId = reqUser._id;
 
         const req = mockRequest({ friendId });

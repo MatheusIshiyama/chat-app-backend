@@ -11,30 +11,30 @@ const mockResponse = () => {
     return res;
 };
 
-describe("test validate auth", () => {
-    it("undefined username", () => {
+describe("Test validateAuth middleware", () => {
+    test("Username undefined", () => {
         const req = mockRequest({ username: undefined });
         const res = mockResponse();
 
-        const response = validateAuth(req, res);
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "No username provided",
+        validateAuth(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "No username provided",
         });
     });
 
-    it("undefined password", () => {
-        const req = mockRequest({ username: "Test" });
+    test("Password undefined", () => {
+        const req = mockRequest({ username: "Test", password: undefined });
         const res = mockResponse();
 
-        const response = validateAuth(req, res);
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "No password provided",
+        validateAuth(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "No password provided",
         });
     });
 
-    it("username and password provided", async () => {
+    test("Username and password provided", async () => {
         const req = mockRequest({ username: "Test", password: "test" });
         const res = mockResponse();
         const next = jest.fn();

@@ -27,7 +27,7 @@ const UserController = {
 
         await sendMail(body.email, verifyCode, "Confirm register");
 
-        return res.status(201).json({ message: user });
+        return res.status(201).json({ user });
     },
 
     async confirm(req, res) {
@@ -38,7 +38,7 @@ const UserController = {
             { verifyCode: "verified", verified: true }
         );
 
-        return res.status(200).json({ message: "User confirmed" });
+        return res.status(200).json({ error: "User confirmed" });
     },
 
     async addPending(req, res) {
@@ -57,7 +57,7 @@ const UserController = {
             { $push: { requests: userId } }
         );
 
-        return res.status(200).json({ message: "Pending added" });
+        return res.status(200).json({ error: "Pending added" });
     },
 
     async removePending(req, res) {
@@ -76,7 +76,7 @@ const UserController = {
             { $pull: { requests: userId } }
         );
 
-        return res.status(200).json({ message: "Pending removed" });
+        return res.status(200).json({ error: "Pending removed" });
     },
 
     async addFriend(req, res) {
@@ -101,7 +101,7 @@ const UserController = {
             }
         );
 
-        return res.status(200).json({ message: "Friend added" });
+        return res.status(200).json({ error: "Friend added" });
     },
 
     async removeFriend(req, res) {
@@ -120,7 +120,7 @@ const UserController = {
             { $pull: { friendList: userId } }
         );
 
-        return res.status(200).json({ message: "Friend removed" });
+        return res.status(200).json({ error: "Friend removed" });
     },
 };
 

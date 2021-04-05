@@ -1,22 +1,15 @@
-const password = require("../../services/password");
+const { hash, validate } = require("../../services/password");
 
-describe("test password functions", () => {
-    it("hash password", () => {
-        const result = password.hash("testtest");
-        expect(result).toHaveLength(60);
-    });
+test("Test password service", () => {
+    //* hash password
+    expect(hash("testtest")).toHaveLength(60);
 
-    it("compare differents passwords", () => {
-        const pwd = "testtest";
-        const hashPassword = password.hash("testTEST");
-        const result = password.validate(pwd, hashPassword);
-        expect(result).toBe(false);
-    });
+    //* compare differents passwords
+    const pwd = "passwordService";
+    const diffPassword = hash("testTEST");
+    expect(validate(pwd, diffPassword)).toBeFalsy();
 
-    it("compare same passwords", () => {
-        const pwd = "testtest";
-        const hashPassword = password.hash(pwd);
-        const result = password.validate(pwd, hashPassword);
-        expect(result).toBe(true);
-    })
+    //* compare same passwords
+    const hashPassword = hash(pwd);
+    expect(validate(pwd, hashPassword)).toBeTruthy();
 });
