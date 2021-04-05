@@ -1,9 +1,9 @@
 const validateCode = (req, res, next) => {
     if (!req.params.verifyCode)
-        return res.status(400).json({ message: "No verifyCode provided" });
+        return res.status(400).json({ error: "No verifyCode provided" });
 
     if (req.params.verifyCode.length !== 172)
-        return res.status(400).json({ message: "No verifyCode length accept" });
+        return res.status(400).json({ error: "No verifyCode length accept" });
 
     next();
 };

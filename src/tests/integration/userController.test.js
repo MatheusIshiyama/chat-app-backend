@@ -15,6 +15,30 @@ const mockResponse = () => {
     return res;
 };
 
+const newUser = async (title, code) => {
+    let verifyCode, verified;
+    if (!code) {
+        verifyCode = "verified";
+        verified = true;
+    } else {
+        verifyCode = code;
+        verified = false;
+    }
+    await new User({
+        username: title,
+        name: title,
+        email: `${title}@chatApp.com`,
+        verifyCode,
+        verified,
+        password: title,
+        createdAt: Date.now(),
+    }).save();
+};
+
+const findUser = async (username) => {
+    return await User.findOne({ username });
+};
+
 beforeAll(async () => {
     await mongoose.disconnect();
     await mongoose.connect(process.env.MONGO_DEV, {
@@ -28,8 +52,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    await User.findOneAndDelete({ username: "testtest" });
-    await User.findOneAndDelete({ username: "test_test" });
+    await User.findOneAndDelete({ username: "registertest" });
+    await User.findOneAndDelete({ username: "confirmTest" });
     await User.findOneAndDelete({ username: "addPending1" });
     await User.findOneAndDelete({ username: "addPending2" });
     await User.findOneAndDelete({ username: "removePending1" });
@@ -42,69 +66,43 @@ afterAll(async () => {
     console.log("[DEV_DATABASE] Disconnected");
 });
 
-describe("test user controller", () => {
-    it("register", async () => {
+describe("Test user controller", () => {
+    test("Test register function", async () => {
         const user = {
-            username: "testtest",
-            name: "test",
+            username: "registertest",
+            name: "registerTest",
             email: process.env.EMAIL,
-            password: "testTEST12!@",
+            password: "registerTest",
         };
         const req = mockRequest({ body: user });
         const res = mockResponse();
 
-        const response = await userController.register(req, res);
-        expect(response.status).toHaveBeenCalledWith(201);
+        await userController.register(req, res);
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.json).toHaveBeenCalledWith(expect.any(Object));
     });
 
-    it("confirm", async () => {
+    test("Test confirm function", async () => {
         const verifyCode = crypto.randomBytes(128).toString("base64");
 
-        const user = new User({
-            username: "test_test",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode,
-            verified: false,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await user.save();
+        await newUser("confirmTest", verifyCode);
 
         const req = mockRequest({ params: { verifyCode } });
         const res = mockResponse();
 
-        const response = await userController.confirm(req, res);
-        expect(response.status).toHaveBeenCalledWith(200);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "User confirmed",
+        await userController.confirm(req, res);
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "User confirmed",
         });
     });
 
-    it("add pending", async () => {
-        const saveUser1 = new User({
-            username: "addPending1",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "verified",
-            verified: true,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await saveUser1.save();
-        const saveUser2 = new User({
-            username: "addPending2",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "verified",
-            verified: true,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await saveUser2.save();
+    test("Test addPending function", async () => {
+        await newUser("addPending1");
+        await newUser("addPending2");
 
-        var user1 = await User.findOne({ username: "addPending1" });
-        var user2 = await User.findOne({ username: "addPending2" });
+        var user1 = await findUser("addPending1");
+        var user2 = await findUser("addPending2");
 
         const req = mockRequest({
             userId: user1._id,
@@ -114,8 +112,8 @@ describe("test user controller", () => {
 
         await userController.addPending(req, res);
 
-        user1 = await User.findOne({ username: "addPending1" });
-        user2 = await User.findOne({ username: "addPending2" });
+        user1 = await findUser("addPending1");
+        user2 = await findUser("addPending2");
 
         expect(user1.pending[0].toString("base64")).toBe(
             user2._id.toString("base64")
@@ -125,40 +123,22 @@ describe("test user controller", () => {
         );
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
-            message: "Pending added",
+            error: "Pending added",
         });
     });
 
-    it("remove pending", async () => {
-        const saveUser1 = new User({
-            username: "removePending1",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "verified",
-            verified: true,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await saveUser1.save();
-        const saveUser2 = new User({
-            username: "removePending2",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "verified",
-            verified: true,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await saveUser2.save();
+    test("Test removePending function", async () => {
+        await newUser("removePending1");
+        await newUser("removePending2");
 
-        var user1 = await User.findOne({ username: "removePending1" });
-        var user2 = await User.findOne({ username: "removePending2" });
+        var user1 = await findUser("removePending1");
+        var user2 = await findUser("removePending2");
 
-        user1 = await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             { _id: user1._id },
             { $push: { pending: user2._id } }
         );
-        user2 = await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             { _id: user2._id },
             { $push: { requests: user1._id } }
         );
@@ -171,47 +151,29 @@ describe("test user controller", () => {
 
         await userController.removePending(req, res);
 
-        user1 = await User.findOne({ username: "removePending1" });
-        user2 = await User.findOne({ username: "removePending2" });
+        var user1 = await findUser("removePending1");
+        var user2 = await findUser("removePending2");
 
         expect(user1.pending).toHaveLength(0);
         expect(user2.requests).toHaveLength(0);
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
-            message: "Pending removed",
+            error: "Pending removed",
         });
     });
 
-    it("add friend", async () => {
-        const saveUser1 = new User({
-            username: "addFriend1",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "verified",
-            verified: true,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await saveUser1.save();
-        const saveUser2 = new User({
-            username: "addFriend2",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "verified",
-            verified: true,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await saveUser2.save();
+    test("Test addFriend function", async () => {
+        await newUser("addFriend1");
+        await newUser("addFriend2");
 
-        var user1 = await User.findOne({ username: "addFriend1" });
-        var user2 = await User.findOne({ username: "addFriend2" });
+        var user1 = await findUser("addFriend1");
+        var user2 = await findUser("addFriend2");
 
-        user1 = await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             { _id: user1._id },
             { $push: { pending: user2._id } }
         );
-        user2 = await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             { _id: user2._id },
             { $push: { requests: user1._id } }
         );
@@ -224,8 +186,8 @@ describe("test user controller", () => {
 
         await userController.addFriend(req, res);
 
-        user1 = await User.findOne({ username: "addFriend1" });
-        user2 = await User.findOne({ username: "addFriend2" });
+        user1 = await findUser("addFriend1");
+        user2 = await findUser("addFriend2");
 
         expect(user1.friendList[0].toString("base64")).toBe(
             user2._id.toString("base64")
@@ -235,40 +197,22 @@ describe("test user controller", () => {
         );
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
-            message: "Friend added",
+            error: "Friend added",
         });
     });
 
-    it("add friend", async () => {
-        const saveUser1 = new User({
-            username: "removeFriend1",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "verified",
-            verified: true,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await saveUser1.save();
-        const saveUser2 = new User({
-            username: "removeFriend2",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "verified",
-            verified: true,
-            password: "testing",
-            createdAt: Date.now(),
-        });
-        await saveUser2.save();
+    test("add friend", async () => {
+        await newUser("removeFriend1");
+        await newUser("removeFriend2");
 
-        var user1 = await User.findOne({ username: "removeFriend1" });
-        var user2 = await User.findOne({ username: "removeFriend2" });
+        var user1 = await findUser("removeFriend1");
+        var user2 = await findUser("removeFriend2");
 
-        user1 = await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             { _id: user1._id },
             { $push: { pending: user2._id } }
         );
-        user2 = await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             { _id: user2._id },
             { $push: { requests: user1._id } }
         );
@@ -281,14 +225,14 @@ describe("test user controller", () => {
 
         await userController.removeFriend(req, res);
 
-        user1 = await User.findOne({ username: "removeFriend1" });
-        user2 = await User.findOne({ username: "removeFriend2" });
+        user1 = await findUser("removeFriend1");
+        user2 = await findUser("removeFriend2");
 
         expect(user1.friendList).toHaveLength(0);
         expect(user2.friendList).toHaveLength(0);
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
-            message: "Friend removed",
+            error: "Friend removed",
         });
     });
 });

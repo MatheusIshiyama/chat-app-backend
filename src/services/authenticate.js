@@ -5,10 +5,10 @@ require("dotenv").config();
 
 const authenticate = async (username, password, res) => {
     if (!username)
-        return res.status(400).json({ message: "No username provided" });
+        return res.status(400).json({ error: "No username provided" });
 
     if (!password)
-        return res.status(400).json({ message: "No password provided" });
+        return res.status(400).json({ error: "No password provided" });
 
     const userExists = await User.findOne({ username });
 
@@ -19,7 +19,7 @@ const authenticate = async (username, password, res) => {
             userExists.password = undefined;
 
             if (!userExists.verified)
-                return res.status(401).json({ message: "User unverified" });
+                return res.status(401).json({ error: "User unverified" });
 
             const token = jwt.sign(
                 { id: userExists._id },
@@ -31,9 +31,9 @@ const authenticate = async (username, password, res) => {
 
         return res
             .status(401)
-            .json({ message: "Invalid username or password" });
+            .json({ error: "Invalid username or password" });
     }
-    return res.status(401).json({ message: "Invalid username or password" });
+    return res.status(401).json({ error: "Invalid username or password" });
 };
 
 module.exports = authenticate;

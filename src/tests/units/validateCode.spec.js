@@ -12,30 +12,30 @@ const mockResponse = () => {
     return res;
 };
 
-describe("test validate code", () => {
-    it("undefined code", () => {
-        const req = mockRequest({ verifyCode: null });
+describe("Test validateCode middleware", () => {
+    test("Code undefined", () => {
+        const req = mockRequest({ verifyCode: undefined });
         const res = mockResponse();
 
-        const response = validateCode(req, res);
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "No verifyCode provided",
+        validateCode(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "No verifyCode provided",
         });
     });
 
-    it("invalid code length", () => {
+    test("Invalid code length", () => {
         const req = mockRequest({ verifyCode: "testtest" });
         const res = mockResponse();
 
-        const response = validateCode(req, res);
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "No verifyCode length accept",
+        validateCode(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "No verifyCode length accept",
         });
     });
 
-    it("valid code", () => {
+    test("Valid code", () => {
         const code = crypto.randomBytes(128).toString("base64");
         const req = mockRequest({ verifyCode: code });
         const res = mockResponse();

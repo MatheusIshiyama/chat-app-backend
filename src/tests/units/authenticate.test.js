@@ -24,102 +24,110 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    await User.findOneAndDelete({ username: "test_test" });
-    await User.findOneAndDelete({ username: "testTesting" });
-    await User.findOneAndDelete({ username: "test123test" });
+    await User.findOneAndDelete({ username: "authenticateTest1" });
+    await User.findOneAndDelete({ username: "authenticateTest2" });
+    await User.findOneAndDelete({ username: "authenticateTest3" });
+    await User.findOneAndDelete({ username: "authenticateTest4" });
     await mongoose.disconnect();
     console.log("[DEV_DATABASE] Disconnected");
 });
 
-describe("test authenticate service", () => {
-    it("undefined username", async () => {
+describe("Test authenticate service", () => {
+    test("Username undefined", async () => {
         const res = mockResponse();
 
-        const response = await authenticate(undefined, undefined, res);
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "No username provided",
+        await authenticate(undefined, undefined, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "No username provided",
         });
     });
 
-    it("undefined password", async () => {
+    test("Password undefined", async () => {
         const res = mockResponse();
 
-        const response = await authenticate("test_test", undefined, res);
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "No password provided",
+        await authenticate("authenticateTest", undefined, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "No password provided",
         });
     });
 
-    it("invalid username", async () => {
+    test("Invalid username", async () => {
         const res = mockResponse();
-
-        const response = await authenticate("test_test", "testTEST12!@", res);
-        expect(response.status).toHaveBeenCalledWith(401);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "Invalid username or password",
-        });
-    });
-
-    it("invalid password", async () => {
-        const res = mockResponse();
-        const pwd = await password.hash("test");
-        const user = new User({
-            username: "test_test",
+        const pwd = await password.hash("testing");
+        await new User({
+            username: "authenticateTest1",
             name: "test_test",
             email: "test_test@test.com",
             verifyCode: "testtest",
             verified: false,
             password: pwd,
             createdAt: Date.now(),
-        });
-        await user.save();
+        }).save();
 
-        const response = await authenticate("test_test", "testTEST12!@", res);
-        expect(response.status).toHaveBeenCalledWith(401);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "Invalid username or password",
+        await authenticate("authenticate", "testTEST12!@", res);
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "Invalid username or password",
         });
     });
 
-    it("valid username and password but not verified", async () => {
+    test("Invalid password", async () => {
         const res = mockResponse();
-        const pwd = await password.hash("test");
-        const user = new User({
-            username: "testTesting",
+        const pwd = await password.hash("testing");
+        await new User({
+            username: "authenticateTest2",
             name: "test_test",
-            email: "testTEST@test.com",
+            email: "test_test@test.com",
             verifyCode: "testtest",
             verified: false,
             password: pwd,
             createdAt: Date.now(),
-        });
-        await user.save();
+        }).save();
 
-        const response = await authenticate("testTesting", "test", res);
-        expect(response.status).toHaveBeenCalledWith(401);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "User unverified",
+        await authenticate("authenticate", "testTEST12!@", res);
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "Invalid username or password",
         });
     });
 
-    it("valid username and password", async () => {
+    test("Valid username and password but not verified", async () => {
         const res = mockResponse();
-        const pwd = await password.hash("test");
-        const user = new User({
-            username: "test123test",
+        const pwd = await password.hash("testing");
+        await new User({
+            username: "authenticateTest3",
             name: "test_test",
-            email: "testTEST@test.com",
+            email: "test_test@test.com",
+            verifyCode: "testtest",
+            verified: false,
+            password: pwd,
+            createdAt: Date.now(),
+        }).save();
+
+        await authenticate("authenticateTest3", "testing", res);
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "User unverified",
+        });
+    });
+
+    test("Valid username and password and verified", async () => {
+        const res = mockResponse();
+        const pwd = await password.hash("testing");
+        await new User({
+            username: "authenticateTest4",
+            name: "test_test",
+            email: "test_test@test.com",
             verifyCode: "verified",
             verified: true,
             password: pwd,
             createdAt: Date.now(),
-        });
-        await user.save();
+        }).save();
 
-        const response = await authenticate("test123test", "test", res);
-        expect(response.status).toHaveBeenCalledWith(202);
-        expect(response.json).toHaveBeenCalled();
+        await authenticate("authenticateTest4", "testing", res);
+        expect(res.status).toHaveBeenCalledWith(202);
+        expect(res.json).toHaveBeenCalled();
     });
 });

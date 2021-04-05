@@ -11,12 +11,12 @@ const transporter = nodeMailer.createTransport({
 });
 
 const sendEmail = async (email, verifyCode, subject) => {
-    if (!email) return "no email provided";
-    if (!verifyCode) return "no verifyCode provided";
-    if (!subject) return "no subject provided";
+    if (!email) return "No email provided";
+    if (!verifyCode) return "No verifyCode provided";
+    if (!subject) return "No subject provided";
 
     const isValid = validateBody.email(email);
-    if (!isValid) return "invalid email type";
+    if (!isValid) return "Invalid email format";
 
     const mailOptions = {
         from: process.env.EMAIL,
@@ -27,7 +27,7 @@ const sendEmail = async (email, verifyCode, subject) => {
 
     await transporter.sendMail(mailOptions);
 
-    return "email sent";
+    return "Email sent";
 };
 
 module.exports = sendEmail;
