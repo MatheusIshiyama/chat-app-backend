@@ -10,6 +10,8 @@ const authenticate = async (username, password, res) => {
     if (!password)
         return res.status(400).json({ error: "No password provided" });
 
+    username = username.toLowerCase();
+
     const userExists = await User.findOne({ username });
 
     if (userExists) {
@@ -29,9 +31,7 @@ const authenticate = async (username, password, res) => {
             return res.status(202).json({ token });
         }
 
-        return res
-            .status(401)
-            .json({ error: "Invalid username or password" });
+        return res.status(401).json({ error: "Invalid username or password" });
     }
     return res.status(401).json({ error: "Invalid username or password" });
 };

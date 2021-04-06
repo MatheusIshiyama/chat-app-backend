@@ -57,7 +57,7 @@ describe("Test authenticate service", () => {
         const res = mockResponse();
         const pwd = await password.hash("testing");
         await new User({
-            username: "authenticateTest1",
+            username: "authenticatetest1",
             name: "test_test",
             email: "test_test@test.com",
             verifyCode: "testtest",
@@ -77,7 +77,7 @@ describe("Test authenticate service", () => {
         const res = mockResponse();
         const pwd = await password.hash("testing");
         await new User({
-            username: "authenticateTest2",
+            username: "authenticatetest2",
             name: "test_test",
             email: "test_test@test.com",
             verifyCode: "testtest",
@@ -95,9 +95,9 @@ describe("Test authenticate service", () => {
 
     test("Valid username and password but not verified", async () => {
         const res = mockResponse();
-        const pwd = await password.hash("testing");
+        const pwd = password.hash("testing");
         await new User({
-            username: "authenticateTest3",
+            username: "authenticatetest3",
             name: "test_test",
             email: "test_test@test.com",
             verifyCode: "testtest",
@@ -117,7 +117,7 @@ describe("Test authenticate service", () => {
         const res = mockResponse();
         const pwd = await password.hash("testing");
         await new User({
-            username: "authenticateTest4",
+            username: "authenticatetest4",
             name: "test_test",
             email: "test_test@test.com",
             verifyCode: "verified",

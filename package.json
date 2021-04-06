@@ -9,7 +9,8 @@
         "test": "jest"
     },
     "jest": {
-        "testEnvironment": "node"
+        "testEnvironment": "node",
+        "slowTestThreshold": 10
     },
     "repository": {
         "type": "git",
@@ -24,7 +25,7 @@
     "homepage": "https://github.com/MatheusIshiyama/chat-app-backend#readme",
     "dependencies": {
         "bcrypt": "^5.0.1",
-        "crypto": "^1.0.1",
+        "cors": "^2.8.5",
         "dotenv": "^8.2.0",
         "email-validator": "^2.0.4",
         "express": "^4.17.1",

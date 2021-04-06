@@ -1,7 +1,7 @@
 const userController = require("../../controllers/user");
 const User = require("../../models/user");
 const mongoose = require("mongoose");
-const crypto = require("crypto");
+const generateCode = require("../../services/generateCode");
 require("dotenv").config();
 
 const mockRequest = (content) => {
@@ -15,20 +15,20 @@ const mockResponse = () => {
     return res;
 };
 
-const newUser = async (title, code) => {
-    let verifyCode, verified;
+const newUser = async (title, verifyCode) => {
+    let code, verified;
     if (!code) {
-        verifyCode = "verified";
+        code = "verified";
         verified = true;
     } else {
-        verifyCode = code;
+        code = verifyCode;
         verified = false;
     }
     await new User({
         username: title,
         name: title,
         email: `${title}@chatApp.com`,
-        verifyCode,
+        code,
         verified,
         password: title,
         createdAt: Date.now(),
@@ -83,17 +83,17 @@ describe("Test user controller", () => {
     });
 
     test("Test confirm function", async () => {
-        const verifyCode = crypto.randomBytes(128).toString("base64");
+        const code = generateCode();
 
-        await newUser("confirmTest", verifyCode);
+        await newUser("confirmTest", code);
 
-        const req = mockRequest({ params: { verifyCode } });
+        const req = mockRequest({ body: { code } });
         const res = mockResponse();
 
         await userController.confirm(req, res);
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
-            error: "User confirmed",
+            message: "User confirmed",
         });
     });
 

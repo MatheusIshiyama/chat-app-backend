@@ -1,8 +1,8 @@
 const validateCode = require("../../middlewares/validateCode");
-const crypto = require("crypto");
+const generateCode = require("../../services/generateCode");
 
 const mockRequest = (content) => {
-    return { params: content };
+    return { body: content };
 };
 
 const mockResponse = () => {
@@ -14,30 +14,30 @@ const mockResponse = () => {
 
 describe("Test validateCode middleware", () => {
     test("Code undefined", () => {
-        const req = mockRequest({ verifyCode: undefined });
+        const req = mockRequest({ code: undefined });
         const res = mockResponse();
 
         validateCode(req, res);
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({
-            error: "No verifyCode provided",
+            error: "No code provided",
         });
     });
 
     test("Invalid code length", () => {
-        const req = mockRequest({ verifyCode: "testtest" });
+        const req = mockRequest({ code: "test" });
         const res = mockResponse();
 
         validateCode(req, res);
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({
-            error: "No verifyCode length accept",
+            error: "No code length accept",
         });
     });
 
     test("Valid code", () => {
-        const code = crypto.randomBytes(128).toString("base64");
-        const req = mockRequest({ verifyCode: code });
+        const code = generateCode();
+        const req = mockRequest({ code });
         const res = mockResponse();
         const next = jest.fn();
 
