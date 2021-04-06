@@ -5,7 +5,7 @@ const User = new database.Schema(
         username: String,
         name: String,
         email: String,
-        verifyCode: String,
+        code: String,
         verified: Boolean,
         password: String,
         createdAt: Date,

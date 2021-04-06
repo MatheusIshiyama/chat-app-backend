@@ -2,17 +2,18 @@ const crypto = require("crypto");
 const User = require("../models/user");
 const sendMail = require("../services/sendMail");
 const password = require("../services/password");
+const generateCode = require("../services/generateCode");
 
 const UserController = {
     async register(req, res) {
         const body = req.body;
         const hashPassword = password.hash(body.password);
-        const verifyCode = crypto.randomBytes(128).toString("base64");
+        const code = generateCode();
         const newUser = new User({
             username: body.username.toLowerCase(),
             name: body.name,
             email: body.email,
-            verifyCode,
+            code,
             verified: false,
             password: hashPassword,
             createdAt: Date.now(),
@@ -25,20 +26,20 @@ const UserController = {
             { _id: false, password: false }
         );
 
-        await sendMail(body.email, verifyCode, "Confirm register");
+        await sendMail(body.email, code, "Confirm register");
 
         return res.status(201).json({ user });
     },
 
     async confirm(req, res) {
-        const { verifyCode } = req.params;
+        const { code } = req.body;
 
         await User.findOneAndUpdate(
-            { verifyCode },
-            { verifyCode: "verified", verified: true }
+            { code },
+            { code: "verified", verified: true }
         );
 
-        return res.status(200).json({ error: "User confirmed" });
+        return res.status(200).json({ message: "User confirmed" });
     },
 
     async addPending(req, res) {

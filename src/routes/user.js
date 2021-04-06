@@ -12,7 +12,7 @@ userRoutes.post("/register", validateRegister, (req, res) => {
     UserController.register(req, res);
 });
 
-userRoutes.get("/confirm/:verifyCode", validateCode, (req, res) => {
+userRoutes.post("/confirm", validateCode, (req, res) => {
     UserController.confirm(req, res);
 });
 

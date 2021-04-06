@@ -10,9 +10,9 @@ const transporter = nodeMailer.createTransport({
     },
 });
 
-const sendEmail = async (email, verifyCode, subject) => {
+const sendEmail = async (email, code, subject) => {
     if (!email) return "No email provided";
-    if (!verifyCode) return "No verifyCode provided";
+    if (!code) return "No code provided";
     if (!subject) return "No subject provided";
 
     const isValid = validateBody.email(email);
@@ -22,7 +22,7 @@ const sendEmail = async (email, verifyCode, subject) => {
         from: process.env.EMAIL,
         to: email,
         subject,
-        text: `${process.env.CONFIRM_URL}/${verifyCode}`,
+        text: `Verify code is:\n ${code}`,
     };
 
     await transporter.sendMail(mailOptions);

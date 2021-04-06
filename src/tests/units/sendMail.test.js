@@ -6,7 +6,7 @@ test("Test sendMail service", async () => {
     expect(await sendMail(undefined, "test")).toBe("No email provided");
 
     //* verifyCode undefined
-    expect(await sendMail("test", undefined)).toBe("No verifyCode provided");
+    expect(await sendMail("test", undefined)).toBe("No code provided");
 
     //* subject undefined
     expect(await sendMail("test", "test", undefined)).toBe(
