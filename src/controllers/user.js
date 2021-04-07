@@ -1,45 +1,57 @@
-const crypto = require("crypto");
 const User = require("../models/user");
 const sendMail = require("../services/sendMail");
 const password = require("../services/password");
+const authenticate = require("../services/authenticate");
 const generateCode = require("../services/generateCode");
 
 const UserController = {
+    async user(req, res) {
+        const { userId } = req;
+        const user = await User.findOne(
+            { _id: userId },
+            { _id: false, password: false, code: false }
+        );
+
+        res.status(200).json({ user });
+    },
+
     async register(req, res) {
         const body = req.body;
         const hashPassword = password.hash(body.password);
+        const username = body.username.toLowerCase();
         const code = generateCode();
         const newUser = new User({
-            username: body.username.toLowerCase(),
+            username,
             name: body.name,
             email: body.email,
             code,
             verified: false,
             password: hashPassword,
             createdAt: Date.now(),
-            friendList: [],
         });
         await newUser.save();
 
-        const user = await User.findOne(
-            { username: body.username },
-            { _id: false, password: false }
-        );
-
         await sendMail(body.email, code, "Confirm register");
 
-        return res.status(201).json({ user });
+        return await authenticate(username, body.password, res);
     },
 
     async confirm(req, res) {
-        const { code } = req.body;
+        const { username, code } = req.body;
 
-        await User.findOneAndUpdate(
-            { code },
-            { code: "verified", verified: true }
+        let user = await User.findOne({ username, code });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        user = await User.findOneAndUpdate(
+            { username },
+            { code: "verified", verified: true },
+            { new: true }
         );
 
-        return res.status(200).json({ message: "User confirmed" });
+        return res.status(200).json({ message: "User confirmed", user });
     },
 
     async addPending(req, res) {
