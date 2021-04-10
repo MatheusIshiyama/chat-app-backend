@@ -9,10 +9,29 @@ const UserController = {
         const { userId } = req;
         const user = await User.findOne(
             { _id: userId },
-            { _id: false, password: false, code: false }
+            { password: false, code: false }
         );
 
         res.status(200).json({ user });
+    },
+
+    async info(req, res) {
+        const { userid } = req.headers;
+        const user = await User.findOne(
+            { _id: userid },
+            {
+                email: false,
+                password: false,
+                code: false,
+                verified: false,
+                friendList: false,
+                requests: false,
+                pending: false,
+                createdAt: false,
+            }
+        );
+
+        res.status(200).json(user);
     },
 
     async register(req, res) {
@@ -54,67 +73,84 @@ const UserController = {
         return res.status(200).json({ message: "User confirmed", user });
     },
 
-    async addPending(req, res) {
-        const userId = req.userId;
-        const newPendingId = req.body.friendId;
-
+    async addPending(user, friend, socket) {
         //* add friendId to pending status
         await User.findOneAndUpdate(
-            { _id: userId },
-            { $push: { pending: newPendingId } }
+            { _id: user._id },
+            {
+                $push: {
+                    pending: {
+                        id: friend._id,
+                        username: friend.username,
+                    },
+                },
+            }
         );
 
         //* add userId to request status in friendUser
         await User.findOneAndUpdate(
-            { _id: newPendingId },
-            { $push: { requests: userId } }
+            { _id: friend._id },
+            {
+                $push: {
+                    requests: {
+                        id: user._id,
+                        username: user.username,
+                    },
+                },
+            }
         );
 
-        return res.status(200).json({ error: "Pending added" });
+        socket.emit("alert", `send friend request to ${friend.username}`);
     },
 
-    async removePending(req, res) {
-        const userId = req.userId;
-        const removePendingId = req.body.friendId;
-
+    async removePending(user, friend, socket) {
         //* remove friendId from pending status
         await User.findOneAndUpdate(
-            { _id: userId },
-            { $pull: { pending: removePendingId } }
+            { _id: user._id },
+            { $pull: { pending: { id: friend._id } } }
         );
 
         //* remove userId from request status in friendUser
         await User.findOneAndUpdate(
-            { _id: removePendingId },
-            { $pull: { requests: userId } }
+            { _id: friend._id },
+            { $pull: { requests: { id: user._id } } }
         );
 
-        return res.status(200).json({ error: "Pending removed" });
+        socket.emit("alert", `${friend.username}'s request declined`);
     },
 
-    async addFriend(req, res) {
-        const userId = req.userId;
-        const newFriendId = req.body.friendId;
-
+    async addFriend(user, friend, socket) {
         //* add newFriend to user's friends
         await User.findOneAndUpdate(
-            { _id: userId },
+            { _id: user._id },
             {
-                $push: { friendList: newFriendId },
-                $pull: { requests: newFriendId },
+                $push: {
+                    friendList: {
+                        id: friend._id,
+                        name: friend.name,
+                        username: friend.username,
+                    },
+                },
+                $pull: { requests: { id: friend._id } },
             }
         );
 
         //* add user to newFriend's friends
         await User.findOneAndUpdate(
-            { _id: newFriendId },
+            { _id: friend._id },
             {
-                $push: { friendList: userId },
-                $pull: { pending: userId },
+                $push: {
+                    friendList: {
+                        id: user._id,
+                        name: user.name,
+                        username: user.username,
+                    },
+                },
+                $pull: { pending: { id: user._id } },
             }
         );
 
-        return res.status(200).json({ error: "Friend added" });
+        socket.emit("alert", `${friend.username} added to your friend list`);
     },
 
     async removeFriend(req, res) {
