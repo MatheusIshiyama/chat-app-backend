@@ -107,13 +107,13 @@ const UserController = {
         //* remove friendId from pending status
         await User.findOneAndUpdate(
             { _id: user._id },
-            { $pull: { pending: { id: friend._id } } }
+            { $pull: { requests: { id: friend._id } } }
         );
 
         //* remove userId from request status in friendUser
         await User.findOneAndUpdate(
             { _id: friend._id },
-            { $pull: { requests: { id: user._id } } }
+            { $pull: { pending: { id: user._id } } }
         );
 
         socket.emit("alert", `${friend.username}'s request declined`);
