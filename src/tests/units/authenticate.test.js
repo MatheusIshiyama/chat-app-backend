@@ -24,10 +24,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    await User.findOneAndDelete({ username: "authenticateTest1" });
-    await User.findOneAndDelete({ username: "authenticateTest2" });
-    await User.findOneAndDelete({ username: "authenticateTest3" });
-    await User.findOneAndDelete({ username: "authenticateTest4" });
+    await User.findOneAndDelete({ username: "authenticatetest1" });
+    await User.findOneAndDelete({ username: "authenticatetest2" });
+    await User.findOneAndDelete({ username: "authenticatetest3" });
+    await User.findOneAndDelete({ username: "authenticatetest4" });
     await mongoose.disconnect();
     console.log("[DEV_DATABASE] Disconnected");
 });
@@ -90,26 +90,6 @@ describe("Test authenticate service", () => {
         expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({
             error: "Invalid username or password",
-        });
-    });
-
-    test("Valid username and password but not verified", async () => {
-        const res = mockResponse();
-        const pwd = password.hash("testing");
-        await new User({
-            username: "authenticatetest3",
-            name: "test_test",
-            email: "test_test@test.com",
-            verifyCode: "testtest",
-            verified: false,
-            password: pwd,
-            createdAt: Date.now(),
-        }).save();
-
-        await authenticate("authenticateTest3", "testing", res);
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "User unverified",
         });
     });
 
