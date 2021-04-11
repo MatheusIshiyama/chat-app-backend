@@ -15,9 +15,15 @@ const mockResponse = () => {
     return res;
 };
 
+const mockSocket = () => {
+    const socket = {};
+    socket.emit = jest.fn().mockReturnValue(socket);
+    return socket;
+};
+
 const newUser = async (title, verifyCode) => {
     let code, verified;
-    if (!code) {
+    if (!verifyCode) {
         code = "verified";
         verified = true;
     } else {
@@ -78,7 +84,7 @@ describe("Test user controller", () => {
         const res = mockResponse();
 
         await userController.register(req, res);
-        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.status).toHaveBeenCalledWith(202);
         expect(res.json).toHaveBeenCalledWith(expect.any(Object));
     });
 
@@ -87,13 +93,29 @@ describe("Test user controller", () => {
 
         await newUser("confirmTest", code);
 
-        const req = mockRequest({ body: { code } });
+        const req = mockRequest({ body: { username: "confirmTest", code } });
         const res = mockResponse();
 
         await userController.confirm(req, res);
+
+        const user = await User.findOne({ username: "confirmTest" });
+
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
             message: "User confirmed",
+            user,
+        });
+
+        const request = mockRequest({
+            body: "invalidConfirm",
+            code: "undefined",
+        });
+        const response = mockResponse();
+
+        await userController.confirm(request, response);
+        expect(response.status).toHaveBeenCalledWith(404);
+        expect(response.json).toHaveBeenCalledWith({
+            error: "User not found",
         });
     });
 
@@ -104,62 +126,50 @@ describe("Test user controller", () => {
         var user1 = await findUser("addPending1");
         var user2 = await findUser("addPending2");
 
-        const req = mockRequest({
-            userId: user1._id,
-            body: { friendId: user2._id },
-        });
-        const res = mockResponse();
+        const socket = mockSocket();
 
-        await userController.addPending(req, res);
+        await userController.addPending(user1, user2, socket);
 
         user1 = await findUser("addPending1");
         user2 = await findUser("addPending2");
 
-        expect(user1.pending[0].toString("base64")).toBe(
+        expect(user1.pending[0].id.toString("base64")).toBe(
             user2._id.toString("base64")
         );
-        expect(user2.requests[0].toString("base64")).toBe(
+        expect(user1.pending[0].username).toBe(user2.username);
+        expect(user2.requests[0].id.toString("base64")).toBe(
             user1._id.toString("base64")
         );
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Pending added",
-        });
+        expect(user2.requests[0].username).toBe(user1.username);
+        expect(socket.emit).toHaveBeenCalledTimes(1);
     });
 
     test("Test removePending function", async () => {
         await newUser("removePending1");
         await newUser("removePending2");
 
-        var user1 = await findUser("removePending1");
-        var user2 = await findUser("removePending2");
+        let user1 = await findUser("removePending1");
+        let user2 = await findUser("removePending2");
 
-        await User.findOneAndUpdate(
-            { _id: user1._id },
-            { $push: { pending: user2._id } }
-        );
         await User.findOneAndUpdate(
             { _id: user2._id },
-            { $push: { requests: user1._id } }
+            { $push: { pending: { id: user1._id, username: user1.username } } }
+        );
+        await User.findOneAndUpdate(
+            { _id: user1._id },
+            { $push: { requests: { id: user2._id, username: user2.username } } }
         );
 
-        const req = mockRequest({
-            userId: user1._id,
-            body: { friendId: user2._id },
-        });
-        const res = mockResponse();
+        const socket = mockSocket();
 
-        await userController.removePending(req, res);
+        await userController.removePending(user1, user2, socket);
 
-        var user1 = await findUser("removePending1");
-        var user2 = await findUser("removePending2");
+        user1 = await findUser("removePending1");
+        user2 = await findUser("removePending2");
 
-        expect(user1.pending).toHaveLength(0);
-        expect(user2.requests).toHaveLength(0);
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Pending removed",
-        });
+        expect(user1.requests).toHaveLength(0);
+        expect(user2.pending).toHaveLength(0);
+        expect(socket.emit).toHaveBeenCalledTimes(1);
     });
 
     test("Test addFriend function", async () => {
@@ -178,27 +188,24 @@ describe("Test user controller", () => {
             { $push: { requests: user1._id } }
         );
 
-        const req = mockRequest({
-            userId: user1._id,
-            body: { friendId: user2._id },
-        });
-        const res = mockResponse();
+        const socket = mockSocket();
 
-        await userController.addFriend(req, res);
+        await userController.addFriend(user1, user2, socket);
 
         user1 = await findUser("addFriend1");
         user2 = await findUser("addFriend2");
 
-        expect(user1.friendList[0].toString("base64")).toBe(
+        expect(user1.friendList[0].id.toString("base64")).toBe(
             user2._id.toString("base64")
         );
-        expect(user2.friendList[0].toString("base64")).toBe(
+        expect(user1.friendList[0].name).toBe(user2.name);
+        expect(user1.friendList[0].username).toBe(user2.username);
+        expect(user2.friendList[0].id.toString("base64")).toBe(
             user1._id.toString("base64")
         );
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Friend added",
-        });
+        expect(user2.friendList[0].name).toBe(user1.name);
+        expect(user2.friendList[0].username).toBe(user1.username);
+        expect(socket.emit).toHaveBeenCalledTimes(1);
     });
 
     test("add friend", async () => {

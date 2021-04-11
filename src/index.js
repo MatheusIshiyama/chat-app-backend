@@ -5,7 +5,6 @@ const server = http.Server(app);
 const socket = socketIo(server, { cors: { origin: "*" } });
 const socketAuth = require("./services/socketAuth");
 const userController = require("./controllers/user");
-const chatController = require("./controllers/chat");
 const User = require("./models/user");
 const Chat = require("./models/chat");
 require("dotenv").config();
@@ -29,10 +28,18 @@ socket.on("connection", async (socket) => {
             let findId = chat.users.filter((users) => {
                 return users != user._id.toString();
             })[0];
+            let getLastMessage 
+
+            if(chat.messages.length) {
+                getLastMessage = chat.messages.slice(-1)[0].message
+            } else {
+                getLastMessage = "No messages yet"
+            }
+            
             if (findId) {
                 const chatInfo = {
                     id: findId,
-                    lastMessage: chat.messages.slice(-1)[0].message,
+                    lastMessage: getLastMessage,
                 };
                 chatLastMessages.push(chatInfo);
             }
